@@ -761,6 +761,11 @@ document.addEventListener("input",e=>{ // keep diary draft
 });
 render();
 if(token)syncNow(false);
+/* auto-update: if a newer version is live, jump to it (beats phone caches) */
+const APP_VER="2026-11-07-c";
+async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
+  if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}catch(e){}}
+checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
 </script>
 </body>
 </html>
