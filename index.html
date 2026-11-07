@@ -161,6 +161,8 @@ nav button:not(.on) svg.nv{opacity:.92}
 .optrow select{border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 10px;font-size:13px}
 .datepick{position:relative;border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;cursor:pointer}
 .datepick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.ddsec{font-size:12px;color:var(--ink2);margin:10px 0 2px;letter-spacing:.5px}
+.dd .todo{padding:8px 2px}
 .uph{margin:10px 0 2px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink2);cursor:pointer;display:flex;justify-content:space-between}
 .todo.plan .tx{color:#5d6b7c}
 .tag.due{background:#dde5ec;color:#4d5e73}
@@ -279,7 +281,7 @@ const I18N={
   tapOpen:"轻点信封，拆开今天 ✦",tapClose:"再点一下，把信收好",trailTitle:"今日足迹",dear:"亲爱的卟哩国王：",lead:d=>`这是你在 ${d} 留下的小脚印——`,
   tally:(a,b)=>`完成 ${a} 件待办 · 记下 ${b} 个瞬间`,moodWas:"这一天的心情：",sign:"—— 你的小工作台",dropHint:"每记一笔，就投进今天的信封里",
   backToday:"回到今天",pastLetters:"往日信件",
-  fullCal:"完整日历",tomorrow:"明天",upcoming:"之后的计划",plan:"计划",planned:d=>`已加入 ${d} 的计划 ✦`,planPh:d=>`给 ${d} 加一件事…`,nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
+  fullCal:"完整日历",tomorrow:"明天",noDayTodos:"这一天没有待办",pickDate:"选日期",upcoming:"之后的计划",plan:"计划",planned:d=>`已加入 ${d} 的计划 ✦`,planPh:d=>`给 ${d} 加一件事…`,nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
@@ -299,7 +301,7 @@ const I18N={
   tapOpen:"Tap the envelope to open today ✦",tapClose:"Tap again to tuck it away",trailTitle:"Today's trail",dear:"Dear 卟哩国王,",lead:d=>`Here are the little footprints you left on ${d} —`,
   tally:(a,b)=>`${a} to-dos done · ${b} moments kept`,moodWas:"Mood that day: ",sign:"— your little workspace",dropHint:"Every note drops into today's envelope",
   backToday:"Back to today",pastLetters:"Past letters",
-  fullCal:"Full calendar",tomorrow:"Tomorrow",upcoming:"Coming up",plan:"Plan",planned:d=>`Planned for ${d} ✦`,planPh:d=>`Add something for ${d}…`,nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
+  fullCal:"Full calendar",tomorrow:"Tomorrow",noDayTodos:"No to-dos this day",pickDate:"Date",upcoming:"Coming up",plan:"Plan",planned:d=>`Planned for ${d} ✦`,planPh:d=>`Add something for ${d}…`,nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
@@ -530,10 +532,14 @@ function home(){
     S.cats.map(c=>`<button class="chip ${S.filter===c.id?"on":""}" data-act="filter" data-v="${c.id}"><i style="background:${c.color}"></i>${esc(c.name)}</button>`).join("")+
     `<button class="chip" data-act="settings">＋</button></div>`;
   const list=visibleTodos();
-  const todos=list.length?list.map(x=>{const c=catOf(x.cat),late=!x.done&&dayOf(x)<TODAY?diffDays(TODAY,dayOf(x)):0;
-    return `<div class="todo ${x.done?"done":""} ${late?"late":""}"><button class="ck" data-act="toggle" data-id="${x.id}">${x.done?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>':""}</button>
-    <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}</div></div>
-    <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}).join(""):`<div class="empty">${t("noTodos")}</div>`;
+  const todos=list.length?list.map(todoRow).join(""):`<div class="empty">${t("noTodos")}</div>`;
+  return homeRest(todos,doneN,tot,pct,tm,chips,week,today);
+}
+function todoRow(x){const c=catOf(x.cat),late=!x.done&&dayOf(x)<TODAY?diffDays(TODAY,dayOf(x)):0,fut=!x.done&&dayOf(x)>TODAY;
+    return `<div class="todo ${x.done?"done":""} ${late?"late":""} ${fut?"plan":""}"><button class="ck" data-act="toggle" data-id="${x.id}">${x.done?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>':""}</button>
+    <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}${fut?`<span class="tag due">📅 ${esc(dueLabel(dayOf(x)))}</span>`:""}</div></div>
+    <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}
+function homeRest(todos,doneN,tot,pct,tm,chips,week,today){
   return header()+`<div class="week">${week}</div><div class="weekh"><button data-act="opencal" data-v="${TODAY}">${t("fullCal")} ›</button></div>
   <div class="stats">
     <div class="stat tint-sage"><small>${t("doneRate")}</small><div class="n">${doneN}<span style="font-size:16px;color:var(--ink2)"> / ${tot}</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
@@ -543,7 +549,7 @@ function home(){
   <div class="card"><div class="card-h"><h2>${t("todos")}</h2><span class="meta">${doneN}/${tot}</span></div>
     <form data-form="todo" style="margin-bottom:10px"><div class="addrow" style="margin-bottom:6px"><input id="todoIn" placeholder="${t("addTodo")}" autocomplete="off"><button class="plus" type="submit">+</button></div>
     <div class="optrow"><select id="todoCat">${S.cats.map(c=>`<option value="${c.id}" ${S.filter===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
-    <label class="datepick"><span id="dueLbl">📅 ${t("today")}</span><input type="date" id="todoDue" value="${TODAY}" min="${TODAY}"></label></div></form>${todos}${upcoming()}</div>
+    <label class="datepick"><span id="dueLbl">📅 ${t("today")}</span><span style="margin-left:4px;color:var(--ink2)">▾</span><input type="date" id="todoDue" value="${TODAY}" min="${TODAY}"></label></div></form>${todos}${upcoming()}</div>
   <div class="card tint-ochre" style="background:linear-gradient(170deg,#fcf6ea,#f6e6c8)"><div class="card-h"><h2>${t("mood")}</h2><span class="meta">${I18N[S.lang].dayFmt(today.getMonth()+1,today.getDate(),today)}</span></div>
     <div class="moods">${[5,4,3,2,1].map(l=>`<button class="mood ${tm.level===l?"on":""}" data-act="mood" data-v="${l}">${moodSVG(l)}<span>${t("moods")[l]}</span></button>`).join("")}</div>
     <div style="margin-top:12px;font-weight:600;font-size:14px;margin-bottom:6px">${t("diary")}</div>
@@ -657,7 +663,8 @@ function render(){
 }
 
 /* ---------- settings sheet ---------- */
-function openSettings(){
+let sheetMode="";
+function openSettings(){sheetMode="set";
   const sh=document.getElementById("sheet");
   sh.innerHTML=`<h2>${t("settings")}</h2>
   <div class="srow"><span style="flex:1">${t("lang")}</span><div class="seg"><button class="${S.lang==="zh"?"on":""}" data-act="setlang" data-v="zh">中文</button><button class="${S.lang==="en"?"on":""}" data-act="setlang" data-v="en">English</button></div></div>
@@ -672,7 +679,7 @@ function openSettings(){
   document.getElementById("mask").classList.add("show");
 }
 let calSel=TODAY, calView=TODAY.slice(0,7);
-function openCal(){
+function openCal(){sheetMode="cal";
   const [y,mm]=calView.split("-").map(Number), m=mm-1;
   const first=new Date(y,m,1), days=new Date(y,m+1,0).getDate(), off=(first.getDay()+6)%7;
   const wk=S.lang==="zh"?["一","二","三","四","五","六","日"]:["M","T","W","T","F","S","S"];
@@ -683,12 +690,14 @@ function openCal(){
     cells+=`<div class="c ${k===TODAY?"t":""} ${k===calSel?"sel":""}" data-act="calpick" data-v="${k}">${d}${mo&&mo.level?moodSVG(mo.level):""}${act?'<i class="pip"></i>':""}</div>`;}
   // detail
   const k=calSel, mo=S.moods[k]||{}, dt=parse(k), it=[];
-  S.todos.filter(x=>x.doneAt===k).forEach(x=>it.push([t("finished"),"#e1e6d2",x.text]));
-  S.todos.filter(x=>!x.done&&dayOf(x)===k).forEach(x=>it.push([k>TODAY?t("plan"):t("pending"),k>TODAY?"#dde5ec":"#f7d8d3",x.text]));
+  const dayTodos=(k===TODAY?S.todos.filter(x=>x.done?x.doneAt===k:dayOf(x)<=k):S.todos.filter(x=>x.done?x.doneAt===k:dayOf(x)===k))
+    .sort((a,b)=>(a.done-b.done)||(dayOf(a)<dayOf(b)?-1:1));
   S.logs.filter(l=>l.date===k).sort((a,b)=>a.time<b.time?-1:1).forEach(l=>it.push([l.time,"#f4e2b8",l.text]));
   if(mo.diary)it.push([t("diaryShort"),"#f3d9d6",mo.diary.length>80?mo.diary.slice(0,80)+"…":mo.diary]);
   const detail=`<div class="dd"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">${mo.level?moodSVG(mo.level,40):""}<h2 style="font-size:19px">${I18N[S.lang].dayFmt(dt.getMonth()+1,dt.getDate(),dt)}</h2>${mo.level?`<span class="badge">${t("moods")[mo.level]}</span>`:""}</div>
-    ${it.length?it.map(r=>`<div class="it"><span style="background:${r[1]}">${esc(r[0])}</span><span>${esc(r[2])}</span></div>`).join(""):`<div class="empty">${t("nothing")}</div>`}
+    <div class="ddsec">${k===TODAY?t("todos"):k>TODAY?t("plan"):t("pending")} · ${dayTodos.filter(x=>x.done).length}/${dayTodos.length}</div>
+    ${dayTodos.length?dayTodos.map(todoRow).join(""):`<div class="empty" style="padding:6px 0">${t("noDayTodos")}</div>`}
+    ${it.length?`<div class="ddsec">${t("log")} · ${t("diaryShort")}</div>`+it.map(r=>`<div class="it"><span style="background:${r[1]}">${esc(r[0])}</span><span>${esc(r[2])}</span></div>`).join(""):""}
     ${k>=TODAY?`<form data-form="caltodo" style="margin-top:10px"><div class="addrow" style="margin-bottom:6px"><input id="calTodoIn" placeholder="${t("planPh")(dueLabel(k))}" autocomplete="off"><button class="plus" type="submit">+</button></div>
     <div class="optrow"><select id="calTodoCat">${S.cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div></form>`:""}</div>`;
   document.getElementById("sheet").innerHTML=`<div class="calnav"><button data-act="calmonth" data-v="-1">‹</button><h2>${I18N[S.lang].monthFmt(y,mm)}</h2><button data-act="calmonth" data-v="1">›</button></div>
@@ -729,6 +738,7 @@ document.addEventListener("click",e=>{
     for(const k in S.moods)if(S.moods[k].sample)delete S.moods[k];for(const k in S.summaries)if(S.summaries[k].sample)delete S.summaries[k];
     if(S.xhs&&S.xhs.sample)S.xhs=null;save();render();openSettings();toast(t("cleared"));return}
   save(!["view","lang","filter","month","closesheet"].includes(a));render();
+  if(sheetMode==="cal"&&document.getElementById("mask").classList.contains("show")&&(a==="toggle"||a==="deltodo"))openCal();
 });
 document.getElementById("mask").addEventListener("click",e=>{if(e.target.id==="mask"){e.currentTarget.classList.remove("show")}});
 document.addEventListener("submit",e=>{
