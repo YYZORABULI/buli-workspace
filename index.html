@@ -157,6 +157,13 @@ nav button .ic svg{position:relative;z-index:1}
 nav button:not(.on) svg.nv{opacity:.92}
 .bunny{margin:2px 10px 18px;transform:rotate(-2.5deg);filter:drop-shadow(0 12px 16px rgba(31,32,38,.28))}
 .bunny svg{display:block;border-radius:4px}
+.optrow{display:flex;gap:6px}
+.optrow select{border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 10px;font-size:13px}
+.datepick{position:relative;border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;cursor:pointer}
+.datepick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.uph{margin:10px 0 2px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink2);cursor:pointer;display:flex;justify-content:space-between}
+.todo.plan .tx{color:#5d6b7c}
+.tag.due{background:#dde5ec;color:#4d5e73}
 /* envelope */
 .env-stage{padding:34px 0 6px;text-align:center}
 .env{position:relative;width:300px;max-width:88vw;aspect-ratio:300/196;margin:0 auto;perspective:1100px;cursor:pointer;transition:margin .6s ease}
@@ -272,7 +279,7 @@ const I18N={
   tapOpen:"轻点信封，拆开今天 ✦",tapClose:"再点一下，把信收好",trailTitle:"今日足迹",dear:"亲爱的卟哩国王：",lead:d=>`这是你在 ${d} 留下的小脚印——`,
   tally:(a,b)=>`完成 ${a} 件待办 · 记下 ${b} 个瞬间`,moodWas:"这一天的心情：",sign:"—— 你的小工作台",dropHint:"每记一笔，就投进今天的信封里",
   backToday:"回到今天",pastLetters:"往日信件",
-  fullCal:"完整日历",nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
+  fullCal:"完整日历",tomorrow:"明天",upcoming:"之后的计划",plan:"计划",planned:d=>`已加入 ${d} 的计划 ✦`,planPh:d=>`给 ${d} 加一件事…`,nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
@@ -292,7 +299,7 @@ const I18N={
   tapOpen:"Tap the envelope to open today ✦",tapClose:"Tap again to tuck it away",trailTitle:"Today's trail",dear:"Dear 卟哩国王,",lead:d=>`Here are the little footprints you left on ${d} —`,
   tally:(a,b)=>`${a} to-dos done · ${b} moments kept`,moodWas:"Mood that day: ",sign:"— your little workspace",dropHint:"Every note drops into today's envelope",
   backToday:"Back to today",pastLetters:"Past letters",
-  fullCal:"Full calendar",nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
+  fullCal:"Full calendar",tomorrow:"Tomorrow",upcoming:"Coming up",plan:"Plan",planned:d=>`Planned for ${d} ✦`,planPh:d=>`Add something for ${d}…`,nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
@@ -496,9 +503,18 @@ function header(){
   <div class="sub">${I18N[S.lang].dateFmt(d.getMonth()+1,d.getDate(),"日一二三四五六"[d.getDay()],d)}</div>`;
 }
 function catOf(id){return S.cats.find(c=>c.id===id)}
+const dayOf=x=>x.due||x.created;
 function visibleTodos(){
-  return S.todos.filter(x=>!x.done||x.doneAt===TODAY).filter(x=>S.filter==="all"||x.cat===S.filter)
-    .sort((a,b)=>(a.done-b.done)||(a.created<b.created?-1:1));
+  return S.todos.filter(x=>x.done?x.doneAt===TODAY:dayOf(x)<=TODAY).filter(x=>S.filter==="all"||x.cat===S.filter)
+    .sort((a,b)=>(a.done-b.done)||(dayOf(a)<dayOf(b)?-1:1));
+}
+function dueLabel(k){if(k===TODAY)return t("today");const d=parse(k),n=diffDays(k,TODAY);return n===1?t("tomorrow"):I18N[S.lang].dayFmt(d.getMonth()+1,d.getDate(),d)}
+function upcoming(){
+  const up=S.todos.filter(x=>!x.done&&dayOf(x)>TODAY&&(S.filter==="all"||x.cat===S.filter)).sort((a,b)=>dayOf(a)<dayOf(b)?-1:1);
+  if(!up.length)return "";
+  return `<div class="uph" data-act="toggleup">${t("upcoming")} · ${up.length} <span>${S.upOpen===false?"▸":"▾"}</span></div>`+(S.upOpen===false?"":up.map(x=>{const c=catOf(x.cat);
+   return `<div class="todo plan"><span class="ck" style="border-style:dashed"></span><div class="tx">${esc(x.text)}<div><span class="tag due">📅 ${esc(dueLabel(dayOf(x)))}</span>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:""}</div></div>
+   <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}).join(""));
 }
 function home(){
   const today=new Date(), start=addDays(today,-3);
@@ -507,14 +523,14 @@ function home(){
     week+= k===TODAY
       ?`<div class="day today" data-act="opencal" data-v="${k}">${t("today")}<b>${I18N[S.lang].dayFmt(d.getMonth()+1,d.getDate(),d)}</b><div class="dot">${m&&m.level?moodSVG(m.level,18):""}</div></div>`
       :`<div class="day" data-act="opencal" data-v="${k}">${t("wk")[d.getDay()]}<b>${d.getDate()}</b><div class="dot">${m&&m.level?moodSVG(m.level,18):""}</div></div>`;}
-  const todaysAll=S.todos.filter(x=>!x.done||x.doneAt===TODAY);
+  const todaysAll=S.todos.filter(x=>x.done?x.doneAt===TODAY:dayOf(x)<=TODAY);
   const doneN=todaysAll.filter(x=>x.done).length, tot=todaysAll.length, pct=tot?Math.round(doneN/tot*100):0;
   const tm=S.moods[TODAY]||{};
   const chips=`<div class="chips"><button class="chip ${S.filter==="all"?"on":""}" data-act="filter" data-v="all">${t("all")}</button>`+
     S.cats.map(c=>`<button class="chip ${S.filter===c.id?"on":""}" data-act="filter" data-v="${c.id}"><i style="background:${c.color}"></i>${esc(c.name)}</button>`).join("")+
     `<button class="chip" data-act="settings">＋</button></div>`;
   const list=visibleTodos();
-  const todos=list.length?list.map(x=>{const c=catOf(x.cat),late=!x.done&&x.created<TODAY?diffDays(TODAY,x.created):0;
+  const todos=list.length?list.map(x=>{const c=catOf(x.cat),late=!x.done&&dayOf(x)<TODAY?diffDays(TODAY,dayOf(x)):0;
     return `<div class="todo ${x.done?"done":""} ${late?"late":""}"><button class="ck" data-act="toggle" data-id="${x.id}">${x.done?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>':""}</button>
     <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}</div></div>
     <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}).join(""):`<div class="empty">${t("noTodos")}</div>`;
@@ -525,9 +541,9 @@ function home(){
   </div>
   ${chips}
   <div class="card"><div class="card-h"><h2>${t("todos")}</h2><span class="meta">${doneN}/${tot}</span></div>
-    <form class="addrow" data-form="todo"><input id="todoIn" placeholder="${t("addTodo")}" autocomplete="off">
-    <select id="todoCat">${S.cats.map(c=>`<option value="${c.id}" ${S.filter===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
-    <button class="plus" type="submit">+</button></form>${todos}</div>
+    <form data-form="todo" style="margin-bottom:10px"><div class="addrow" style="margin-bottom:6px"><input id="todoIn" placeholder="${t("addTodo")}" autocomplete="off"><button class="plus" type="submit">+</button></div>
+    <div class="optrow"><select id="todoCat">${S.cats.map(c=>`<option value="${c.id}" ${S.filter===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
+    <label class="datepick"><span id="dueLbl">📅 ${t("today")}</span><input type="date" id="todoDue" value="${TODAY}" min="${TODAY}"></label></div></form>${todos}${upcoming()}</div>
   <div class="card tint-ochre" style="background:linear-gradient(170deg,#fcf6ea,#f6e6c8)"><div class="card-h"><h2>${t("mood")}</h2><span class="meta">${I18N[S.lang].dayFmt(today.getMonth()+1,today.getDate(),today)}</span></div>
     <div class="moods">${[5,4,3,2,1].map(l=>`<button class="mood ${tm.level===l?"on":""}" data-act="mood" data-v="${l}">${moodSVG(l)}<span>${t("moods")[l]}</span></button>`).join("")}</div>
     <div style="margin-top:12px;font-weight:600;font-size:14px;margin-bottom:6px">${t("diary")}</div>
@@ -663,16 +679,18 @@ function openCal(){
   let cells=wk.map(w=>`<div class="wd">${w}</div>`).join("");
   for(let i=0;i<off;i++)cells+="<div></div>";
   for(let d=1;d<=days;d++){const k=`${y}-${pad(mm)}-${pad(d)}`,mo=S.moods[k];
-    const act=S.logs.some(l=>l.date===k)||S.todos.some(x=>x.created===k||x.doneAt===k);
+    const act=S.logs.some(l=>l.date===k)||S.todos.some(x=>(!x.done&&dayOf(x)===k)||x.doneAt===k);
     cells+=`<div class="c ${k===TODAY?"t":""} ${k===calSel?"sel":""}" data-act="calpick" data-v="${k}">${d}${mo&&mo.level?moodSVG(mo.level):""}${act?'<i class="pip"></i>':""}</div>`;}
   // detail
   const k=calSel, mo=S.moods[k]||{}, dt=parse(k), it=[];
   S.todos.filter(x=>x.doneAt===k).forEach(x=>it.push([t("finished"),"#e1e6d2",x.text]));
-  S.todos.filter(x=>x.created===k&&x.doneAt!==k).forEach(x=>it.push([t("pending"),x.done?"#eee":"#f7d8d3",x.text]));
+  S.todos.filter(x=>!x.done&&dayOf(x)===k).forEach(x=>it.push([k>TODAY?t("plan"):t("pending"),k>TODAY?"#dde5ec":"#f7d8d3",x.text]));
   S.logs.filter(l=>l.date===k).sort((a,b)=>a.time<b.time?-1:1).forEach(l=>it.push([l.time,"#f4e2b8",l.text]));
   if(mo.diary)it.push([t("diaryShort"),"#f3d9d6",mo.diary.length>80?mo.diary.slice(0,80)+"…":mo.diary]);
   const detail=`<div class="dd"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">${mo.level?moodSVG(mo.level,40):""}<h2 style="font-size:19px">${I18N[S.lang].dayFmt(dt.getMonth()+1,dt.getDate(),dt)}</h2>${mo.level?`<span class="badge">${t("moods")[mo.level]}</span>`:""}</div>
-    ${it.length?it.map(r=>`<div class="it"><span style="background:${r[1]}">${esc(r[0])}</span><span>${esc(r[2])}</span></div>`).join(""):`<div class="empty">${t("nothing")}</div>`}</div>`;
+    ${it.length?it.map(r=>`<div class="it"><span style="background:${r[1]}">${esc(r[0])}</span><span>${esc(r[2])}</span></div>`).join(""):`<div class="empty">${t("nothing")}</div>`}
+    ${k>=TODAY?`<form data-form="caltodo" style="margin-top:10px"><div class="addrow" style="margin-bottom:6px"><input id="calTodoIn" placeholder="${t("planPh")(dueLabel(k))}" autocomplete="off"><button class="plus" type="submit">+</button></div>
+    <div class="optrow"><select id="calTodoCat">${S.cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div></form>`:""}</div>`;
   document.getElementById("sheet").innerHTML=`<div class="calnav"><button data-act="calmonth" data-v="-1">‹</button><h2>${I18N[S.lang].monthFmt(y,mm)}</h2><button data-act="calmonth" data-v="1">›</button></div>
     <div class="cal">${cells}</div>${detail}
     <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="savebtn" data-act="closesheet">${t("close")}</button></div>`;
@@ -700,6 +718,7 @@ document.addEventListener("click",e=>{
   else if(a==="month"){const cur=S.calMonth?parse(S.calMonth+"-01"):new Date();const n=new Date(cur.getFullYear(),cur.getMonth()+ +v,1);S.calMonth=`${n.getFullYear()}-${pad(n.getMonth()+1)}`}
   else if(a==="settings"){openSettings();return}
   else if(a==="disconnect"){token=null;sha=null;syncState="off";try{localStorage.removeItem(TK)}catch(e){};openSettings();return}
+  else if(a==="toggleup"){S.upOpen=S.upOpen===false}
   else if(a==="opencal"){calSel=v;calView=v.slice(0,7);openCal();return}
   else if(a==="calpick"){calSel=v;openCal();return}
   else if(a==="calmonth"){const[y,m]=calView.split("-").map(Number);const n=new Date(y,m-1+ +v,1);calView=`${n.getFullYear()}-${pad(n.getMonth()+1)}`;openCal();return}
@@ -714,7 +733,8 @@ document.addEventListener("click",e=>{
 document.getElementById("mask").addEventListener("click",e=>{if(e.target.id==="mask"){e.currentTarget.classList.remove("show")}});
 document.addEventListener("submit",e=>{
   e.preventDefault();const f=e.target.dataset.form;
-  if(f==="todo"){const i=document.getElementById("todoIn"),v=i.value.trim();if(!v)return;S.todos.push({id:uid(),text:v,cat:document.getElementById("todoCat").value,created:TODAY,done:false})}
+  if(f==="todo"){const i=document.getElementById("todoIn"),v=i.value.trim();if(!v)return;const du=(document.getElementById("todoDue")||{}).value||TODAY;S.todos.push({id:uid(),text:v,cat:document.getElementById("todoCat").value,created:TODAY,due:du<TODAY?TODAY:du,done:false});if(du>TODAY)toast(t("planned")(dueLabel(du)))}
+  if(f==="caltodo"){const i=document.getElementById("calTodoIn"),v=i.value.trim();if(!v)return;S.todos.push({id:uid(),text:v,cat:document.getElementById("calTodoCat").value,created:TODAY,due:calSel<TODAY?TODAY:calSel,done:false});save();render();openCal();return}
   if(f==="log"){const i=document.getElementById("logIn"),v=i.value.trim();if(!v)return;S.logs.push({id:uid(),date:TODAY,time:hm(),text:v})}
   if(f==="token"){const v=document.getElementById("tokIn").value.trim();if(!v)return;token=v;
     (async()=>{syncState="busy";openSettings();try{const ok=await pull();if(!sha){S.todos=S.todos.filter(x=>!x.sample);S.logs=S.logs.filter(x=>!x.sample);for(const k in S.moods)if(S.moods[k].sample)delete S.moods[k];for(const k in S.summaries)if(S.summaries[k].sample)delete S.summaries[k];S.updatedAt=Date.now()}
@@ -723,6 +743,7 @@ document.addEventListener("submit",e=>{
   save();render();
 });
 document.addEventListener("change",e=>{
+  if(e.target.id==="todoDue"){const l=document.getElementById("dueLbl");if(l)l.textContent="📅 "+dueLabel(e.target.value||TODAY);return}
   if(e.target.dataset.cat){const c=catOf(e.target.dataset.cat);const v=e.target.value.trim();if(v){c.name=v;save();render()}}
 });
 document.addEventListener("input",e=>{ // keep diary draft
