@@ -595,7 +595,7 @@ function xhs(){
   ${x?x.items.map((it,i)=>`<div class="topic"><span class="badge">${esc(it.tag)}</span> <span style="font-family:var(--display);font-style:italic;color:var(--ink2)">No.${i+1}</span>
    <h3>${esc(it.title)}</h3><div class="why"><b>${t("why")}：</b>${esc(it.why)}</div>
    ${it.summary?`<div class="tsum"><b>${t("tsum")}</b>${esc(it.summary)}</div>`:""}
-   <div class="refs">${it.refs.map(r=>`<div class="ref"><span>${esc(r[0])}</span><span style="color:var(--rose)">♥ ${esc(r[1])}</span></div>`).join("")}</div></div>`).join(""):""}
+   <div class="refs">${it.refs.map(r=>`<div class="ref"><span>${r[2]&&/^https:\/\/(www\.)?xiaohongshu\.com\//.test(r[2])?`<a href="${esc(r[2])}" target="_blank" rel="noopener" style="color:inherit">${esc(r[0])} ↗</a>`:esc(r[0])}</span><span style="color:var(--rose)">♥ ${esc(r[1])}</span></div>`).join("")}</div></div>`).join(""):""}
   ${x&&x.sample?`<div class="empty">${t("xhsNote")}</div>`:""}`;
 }
 function cal(){
