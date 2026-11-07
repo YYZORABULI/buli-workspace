@@ -157,9 +157,16 @@ nav button .ic svg{position:relative;z-index:1}
 nav button:not(.on) svg.nv{opacity:.92}
 .bunny{margin:2px 10px 18px;transform:rotate(-2.5deg);filter:drop-shadow(0 12px 16px rgba(31,32,38,.28))}
 .bunny svg{display:block;border-radius:4px}
-.optrow{display:flex;gap:6px}
+.optrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.catpick{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.cp{border:1px solid var(--line);background:#fff8;border-radius:16px;padding:5px 11px;font-size:12.5px;display:inline-flex;align-items:center;gap:5px;color:var(--ink2)}
+.cp i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.cp.on{border-color:var(--ink);color:var(--ink);background:#fffaf1;box-shadow:inset 0 0 0 1px var(--ink)}
+.cal .c.dc{aspect-ratio:1/1;justify-content:center;padding-top:0;font-size:14px;color:var(--ink)}
+.cal .c.past{color:#c9bdb4;cursor:default}
+.cal .c.dc.sel{background:radial-gradient(circle at 35% 30%,#fff6df,var(--ochre-s) 45%,var(--rose-s) 85%);box-shadow:none;outline:2px dotted rgba(212,143,149,.8);outline-offset:-2px}
 .optrow select{border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 10px;font-size:13px}
-.datepick{position:relative;border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;cursor:pointer}
+.datepick{position:relative;border:1px solid var(--line);background:#fffaf1;border-radius:16px;padding:5px 12px;font-size:12.5px;display:inline-flex;align-items:center;cursor:pointer;margin-left:auto}
 .datepick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 .ddsec{font-size:12px;color:var(--ink2);margin:10px 0 2px;letter-spacing:.5px}
 .dd .todo{padding:8px 2px}
@@ -281,7 +288,7 @@ const I18N={
   tapOpen:"轻点信封，拆开今天 ✦",tapClose:"再点一下，把信收好",trailTitle:"今日足迹",dear:"亲爱的卟哩国王：",lead:d=>`这是你在 ${d} 留下的小脚印——`,
   tally:(a,b)=>`完成 ${a} 件待办 · 记下 ${b} 个瞬间`,moodWas:"这一天的心情：",sign:"—— 你的小工作台",dropHint:"每记一笔，就投进今天的信封里",
   backToday:"回到今天",pastLetters:"往日信件",
-  fullCal:"完整日历",tomorrow:"明天",noDayTodos:"这一天没有待办",pickDate:"选日期",upcoming:"之后的计划",plan:"计划",planned:d=>`已加入 ${d} 的计划 ✦`,planPh:d=>`给 ${d} 加一件事…`,nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
+  fullCal:"完整日历",tomorrow:"明天",dayAfter:"后天",nextMon:"下周一",noDayTodos:"这一天没有待办",pickDate:"选一个日子",upcoming:"之后的计划",plan:"计划",planned:d=>`已加入 ${d} 的计划 ✦`,planPh:d=>`给 ${d} 加一件事…`,nav:["今日","足迹","选题","月历","小结"],dayDetail:"这一天",nothing:"这一天没有记录",pending:"待办",finished:"完成",diaryShort:"日记",
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
@@ -301,7 +308,7 @@ const I18N={
   tapOpen:"Tap the envelope to open today ✦",tapClose:"Tap again to tuck it away",trailTitle:"Today's trail",dear:"Dear 卟哩国王,",lead:d=>`Here are the little footprints you left on ${d} —`,
   tally:(a,b)=>`${a} to-dos done · ${b} moments kept`,moodWas:"Mood that day: ",sign:"— your little workspace",dropHint:"Every note drops into today's envelope",
   backToday:"Back to today",pastLetters:"Past letters",
-  fullCal:"Full calendar",tomorrow:"Tomorrow",noDayTodos:"No to-dos this day",pickDate:"Date",upcoming:"Coming up",plan:"Plan",planned:d=>`Planned for ${d} ✦`,planPh:d=>`Add something for ${d}…`,nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
+  fullCal:"Full calendar",tomorrow:"Tomorrow",dayAfter:"In 2 days",nextMon:"Next Mon",noDayTodos:"No to-dos this day",pickDate:"Date",upcoming:"Coming up",plan:"Plan",planned:d=>`Planned for ${d} ✦`,planPh:d=>`Add something for ${d}…`,nav:["Today","Trail","Topics","Moods","Notes"],dayDetail:"That day",nothing:"Nothing recorded this day",pending:"To-do",finished:"Done",diaryShort:"Diary",
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
@@ -510,12 +517,30 @@ function visibleTodos(){
   return S.todos.filter(x=>x.done?x.doneAt===TODAY:dayOf(x)<=TODAY).filter(x=>S.filter==="all"||x.cat===S.filter)
     .sort((a,b)=>(a.done-b.done)||(dayOf(a)<dayOf(b)?-1:1));
 }
+const CALI=`<svg width="14" height="14" viewBox="0 0 20 20" style="vertical-align:-2px;margin-right:4px"><rect x="2.5" y="4" width="15" height="13" rx="3" fill="#e6ead9" stroke="#4b3f3a" stroke-width="1.2"/><path d="M2.5 8h15" stroke="#4b3f3a" stroke-width="1.2"/><path d="M6.5 2.5v3M13.5 2.5v3" stroke="#4b3f3a" stroke-width="1.2" stroke-linecap="round"/><path d="M11.6 10.2a2.6 2.6 0 1 0 .6 4.6 2.1 2.1 0 0 1-.6-4.6z" fill="#d6a043"/></svg>`;
+let newDue=TODAY, pickCat={home:null,cal:null}, dueView=TODAY.slice(0,7);
+function curCat(scope){const c=pickCat[scope];if(c&&catOf(c))return c;if(scope==="home"&&S.filter!=="all"&&catOf(S.filter))return S.filter;return S.cats[0]?S.cats[0].id:null}
+function catChips(scope){const cur=curCat(scope);return `<div class="catpick">${S.cats.map(c=>`<button type="button" class="cp ${c.id===cur?"on":""}" data-act="pickcat" data-scope="${scope}" data-v="${c.id}"><i style="background:${c.color}"></i>${esc(c.name)}</button>`).join("")}</div>`}
+function openDue(){sheetMode="due";
+  const [y,mm]=dueView.split("-").map(Number),first=new Date(y,mm-1,1),days=new Date(y,mm,0).getDate(),off=(first.getDay()+6)%7;
+  const wk=S.lang==="zh"?["一","二","三","四","五","六","日"]:["M","T","W","T","F","S","S"];
+  let cells=wk.map(w=>`<div class="wd">${w}</div>`).join("");for(let i=0;i<off;i++)cells+="<div></div>";
+  for(let d=1;d<=days;d++){const k=`${y}-${pad(mm)}-${pad(d)}`,past=k<TODAY,n=S.todos.filter(x=>!x.done&&dayOf(x)===k).length;
+    cells+=`<div class="c dc ${k===TODAY?"t":""} ${k===newDue?"sel":""} ${past?"past":""}" ${past?"":`data-act="duepick" data-v="${k}"`}>${d}${n?'<i class="pip"></i>':""}</div>`}
+  const now=new Date(),nextMon=addDays(now,((8-now.getDay())%7)||7);
+  const quick=[[TODAY,t("today")],[ymd(addDays(now,1)),t("tomorrow")],[ymd(addDays(now,2)),t("dayAfter")],[ymd(nextMon),t("nextMon")]];
+  document.getElementById("sheet").innerHTML=`<h2 style="margin-bottom:12px">${t("pickDate")} ✦</h2>
+   <div class="catpick" style="margin-bottom:14px">${quick.map(q=>`<button type="button" class="cp ${q[0]===newDue?"on":""}" data-act="duepick" data-v="${q[0]}">${q[1]}</button>`).join("")}</div>
+   <div class="calnav"><button data-act="duemonth" data-v="-1">‹</button><h2 style="font-size:19px">${I18N[S.lang].monthFmt(y,mm)}</h2><button data-act="duemonth" data-v="1">›</button></div>
+   <div class="cal">${cells}</div>`;
+  document.getElementById("mask").classList.add("show");
+}
 function dueLabel(k){if(k===TODAY)return t("today");const d=parse(k),n=diffDays(k,TODAY);return n===1?t("tomorrow"):I18N[S.lang].dayFmt(d.getMonth()+1,d.getDate(),d)}
 function upcoming(){
   const up=S.todos.filter(x=>!x.done&&dayOf(x)>TODAY&&(S.filter==="all"||x.cat===S.filter)).sort((a,b)=>dayOf(a)<dayOf(b)?-1:1);
   if(!up.length)return "";
   return `<div class="uph" data-act="toggleup">${t("upcoming")} · ${up.length} <span>${S.upOpen===false?"▸":"▾"}</span></div>`+(S.upOpen===false?"":up.map(x=>{const c=catOf(x.cat);
-   return `<div class="todo plan"><span class="ck" style="border-style:dashed"></span><div class="tx">${esc(x.text)}<div><span class="tag due">📅 ${esc(dueLabel(dayOf(x)))}</span>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:""}</div></div>
+   return `<div class="todo plan"><span class="ck" style="border-style:dashed"></span><div class="tx">${esc(x.text)}<div><span class="tag due">${CALI}${esc(dueLabel(dayOf(x)))}</span>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:""}</div></div>
    <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}).join(""));
 }
 function home(){
@@ -537,7 +562,7 @@ function home(){
 }
 function todoRow(x){const c=catOf(x.cat),late=!x.done&&dayOf(x)<TODAY?diffDays(TODAY,dayOf(x)):0,fut=!x.done&&dayOf(x)>TODAY;
     return `<div class="todo ${x.done?"done":""} ${late?"late":""} ${fut?"plan":""}"><button class="ck" data-act="toggle" data-id="${x.id}">${x.done?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>':""}</button>
-    <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}${fut?`<span class="tag due">📅 ${esc(dueLabel(dayOf(x)))}</span>`:""}</div></div>
+    <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}${fut?`<span class="tag due">${CALI}${esc(dueLabel(dayOf(x)))}</span>`:""}</div></div>
     <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}
 function homeRest(todos,doneN,tot,pct,tm,chips,week,today){
   return header()+`<div class="week">${week}</div><div class="weekh"><button data-act="opencal" data-v="${TODAY}">${t("fullCal")} ›</button></div>
@@ -548,8 +573,7 @@ function homeRest(todos,doneN,tot,pct,tm,chips,week,today){
   ${chips}
   <div class="card"><div class="card-h"><h2>${t("todos")}</h2><span class="meta">${doneN}/${tot}</span></div>
     <form data-form="todo" style="margin-bottom:10px"><div class="addrow" style="margin-bottom:6px"><input id="todoIn" placeholder="${t("addTodo")}" autocomplete="off"><button class="plus" type="submit">+</button></div>
-    <div class="optrow"><select id="todoCat">${S.cats.map(c=>`<option value="${c.id}" ${S.filter===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
-    <label class="datepick"><span id="dueLbl">📅 ${t("today")}</span><span style="margin-left:4px;color:var(--ink2)">▾</span><input type="date" id="todoDue" value="${TODAY}" min="${TODAY}"></label></div></form>${todos}${upcoming()}</div>
+    <div class="optrow">${catChips("home")}<button type="button" class="datepick" data-act="opendue"><span id="dueLbl">${CALI}${esc(dueLabel(newDue))}</span><span style="margin-left:4px;color:var(--ink2)">▾</span></button></div></form>${todos}${upcoming()}</div>
   <div class="card tint-ochre" style="background:linear-gradient(170deg,#fcf6ea,#f6e6c8)"><div class="card-h"><h2>${t("mood")}</h2><span class="meta">${I18N[S.lang].dayFmt(today.getMonth()+1,today.getDate(),today)}</span></div>
     <div class="moods">${[5,4,3,2,1].map(l=>`<button class="mood ${tm.level===l?"on":""}" data-act="mood" data-v="${l}">${moodSVG(l)}<span>${t("moods")[l]}</span></button>`).join("")}</div>
     <div style="margin-top:12px;font-weight:600;font-size:14px;margin-bottom:6px">${t("diary")}</div>
@@ -699,7 +723,7 @@ function openCal(){sheetMode="cal";
     ${dayTodos.length?dayTodos.map(todoRow).join(""):`<div class="empty" style="padding:6px 0">${t("noDayTodos")}</div>`}
     ${it.length?`<div class="ddsec">${t("log")} · ${t("diaryShort")}</div>`+it.map(r=>`<div class="it"><span style="background:${r[1]}">${esc(r[0])}</span><span>${esc(r[2])}</span></div>`).join(""):""}
     ${k>=TODAY?`<form data-form="caltodo" style="margin-top:10px"><div class="addrow" style="margin-bottom:6px"><input id="calTodoIn" placeholder="${t("planPh")(dueLabel(k))}" autocomplete="off"><button class="plus" type="submit">+</button></div>
-    <div class="optrow"><select id="calTodoCat">${S.cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select></div></form>`:""}</div>`;
+    <div class="optrow">${catChips("cal")}</div></form>`:""}</div>`;
   document.getElementById("sheet").innerHTML=`<div class="calnav"><button data-act="calmonth" data-v="-1">‹</button><h2>${I18N[S.lang].monthFmt(y,mm)}</h2><button data-act="calmonth" data-v="1">›</button></div>
     <div class="cal">${cells}</div>${detail}
     <div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="savebtn" data-act="closesheet">${t("close")}</button></div>`;
@@ -711,6 +735,10 @@ function toast(m){const e=document.getElementById("toast");e.textContent=m;e.cla
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]"); if(!b)return;
   const a=b.dataset.act,id=b.dataset.id,v=b.dataset.v;
+  if(a==="pickcat"){pickCat[b.dataset.scope]=v;b.parentNode.querySelectorAll(".cp").forEach(x=>x.classList.toggle("on",x===b));return}
+  if(a==="opendue"){dueView=newDue.slice(0,7);openDue();return}
+  if(a==="duepick"){newDue=v;const l=document.getElementById("dueLbl");if(l)l.innerHTML=CALI+esc(dueLabel(v));document.getElementById("mask").classList.remove("show");sheetMode="";return}
+  if(a==="duemonth"){const[y,m]=dueView.split("-").map(Number);const n=new Date(y,m-1+ +v,1);const nv=`${n.getFullYear()}-${pad(n.getMonth()+1)}`;if(nv>=TODAY.slice(0,7)){dueView=nv;openDue()}return}
   if(a==="view"){S.view=v;window.scrollTo(0,0);if(v==="trail"){trailDate=TODAY;envOpen=false}}
   else if(a==="lang"){S.lang=S.lang==="zh"?"en":"zh"}
   else if(a==="setlang"){S.lang=v;save();render();openSettings();return}
@@ -743,8 +771,8 @@ document.addEventListener("click",e=>{
 document.getElementById("mask").addEventListener("click",e=>{if(e.target.id==="mask"){e.currentTarget.classList.remove("show")}});
 document.addEventListener("submit",e=>{
   e.preventDefault();const f=e.target.dataset.form;
-  if(f==="todo"){const i=document.getElementById("todoIn"),v=i.value.trim();if(!v)return;const du=(document.getElementById("todoDue")||{}).value||TODAY;S.todos.push({id:uid(),text:v,cat:document.getElementById("todoCat").value,created:TODAY,due:du<TODAY?TODAY:du,done:false});if(du>TODAY)toast(t("planned")(dueLabel(du)))}
-  if(f==="caltodo"){const i=document.getElementById("calTodoIn"),v=i.value.trim();if(!v)return;S.todos.push({id:uid(),text:v,cat:document.getElementById("calTodoCat").value,created:TODAY,due:calSel<TODAY?TODAY:calSel,done:false});save();render();openCal();return}
+  if(f==="todo"){const i=document.getElementById("todoIn"),v=i.value.trim();if(!v)return;const du=newDue<TODAY?TODAY:newDue;S.todos.push({id:uid(),text:v,cat:curCat("home"),created:TODAY,due:du,done:false});if(du>TODAY)toast(t("planned")(dueLabel(du)));newDue=TODAY}
+  if(f==="caltodo"){const i=document.getElementById("calTodoIn"),v=i.value.trim();if(!v)return;S.todos.push({id:uid(),text:v,cat:curCat("cal"),created:TODAY,due:calSel<TODAY?TODAY:calSel,done:false});save();render();openCal();return}
   if(f==="log"){const i=document.getElementById("logIn"),v=i.value.trim();if(!v)return;S.logs.push({id:uid(),date:TODAY,time:hm(),text:v})}
   if(f==="token"){const v=document.getElementById("tokIn").value.trim();if(!v)return;token=v;
     (async()=>{syncState="busy";openSettings();try{const ok=await pull();if(!sha){S.todos=S.todos.filter(x=>!x.sample);S.logs=S.logs.filter(x=>!x.sample);for(const k in S.moods)if(S.moods[k].sample)delete S.moods[k];for(const k in S.summaries)if(S.summaries[k].sample)delete S.summaries[k];S.updatedAt=Date.now()}
@@ -753,7 +781,6 @@ document.addEventListener("submit",e=>{
   save();render();
 });
 document.addEventListener("change",e=>{
-  if(e.target.id==="todoDue"){const l=document.getElementById("dueLbl");if(l)l.textContent="📅 "+dueLabel(e.target.value||TODAY);return}
   if(e.target.dataset.cat){const c=catOf(e.target.dataset.cat);const v=e.target.value.trim();if(v){c.name=v;save();render()}}
 });
 document.addEventListener("input",e=>{ // keep diary draft
@@ -762,7 +789,7 @@ document.addEventListener("input",e=>{ // keep diary draft
 render();
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-07-c";
+const APP_VER="2026-11-07-d";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
   if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
