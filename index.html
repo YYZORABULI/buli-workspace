@@ -168,6 +168,7 @@ nav button:not(.on) svg.nv{opacity:.92}
 .optrow select{border:1px solid var(--line);background:#fff8;border-radius:16px;padding:6px 10px;font-size:13px}
 .datepick{position:relative;border:1px solid var(--line);background:#fffaf1;border-radius:16px;padding:5px 12px;font-size:12.5px;display:inline-flex;align-items:center;cursor:pointer;margin-left:auto}
 .datepick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.sumcard{cursor:pointer;background:linear-gradient(165deg,#f5f3e6,#e6ebd8)}
 .ddsec{font-size:12px;color:var(--ink2);margin:10px 0 2px;letter-spacing:.5px}
 .dd .todo{padding:8px 2px}
 .uph{margin:10px 0 2px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink2);cursor:pointer;display:flex;justify-content:space-between}
@@ -292,7 +293,7 @@ const I18N={
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
-  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",close:"完成",
+  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
   wk:["日","一","二","三","四","五","六"],
   moods:["","生气","难过","一般","开心","很开心"],
   monthFmt:(y,m)=>`${y}年${m}月`,dateFmt:(m,d,w)=>`${m}月${d}日 · 星期${w}`,dayFmt:(m,d)=>`${m}月${d}日`,
@@ -312,7 +313,7 @@ const I18N={
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
-  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",close:"Done",
+  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
   wk:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
   moods:["","Angry","Sad","Okay","Happy","Joyful"],
   monthFmt:(y,m)=>new Date(y,m-1,1).toLocaleString("en",{month:"long",year:"numeric"}),
@@ -410,11 +411,13 @@ async function push(){
   if(!r.ok)throw new Error(r.status);
   const j=await r.json();sha=j.content.sha;
 }
+function stripSamples(){S.todos=S.todos.filter(x=>!x.sample);S.logs=S.logs.filter(x=>!x.sample);
+  for(const k in S.moods)if(S.moods[k].sample)delete S.moods[k];for(const k in S.summaries)if(S.summaries[k].sample)delete S.summaries[k]}
 async function syncNow(doPush){
   if(!token)return;
   if(syncing){pending=true;return}
   syncing=true;syncState="busy";
-  try{await pull();if(doPush)await push();saveLocal();syncState="ok";lastSync=hm()}
+  try{await pull();const had=JSON.stringify([S.todos,S.logs,S.moods,S.summaries]).includes('"sample":true');stripSamples();if(doPush||had)await push();saveLocal();syncState="ok";lastSync=hm()}
   catch(e){syncState=(String(e.message)==="401"||String(e.message)==="403"||String(e.message)==="404")?"bad":"err"}
   syncing=false;render();if(document.getElementById("mask").classList.contains("show")&&document.getElementById("syncrow"))openSettings();
   if(pending){pending=false;syncNow(true)}
@@ -580,7 +583,8 @@ function homeRest(todos,doneN,tot,pct,tm,chips,week,today){
     <textarea id="diary" placeholder="${t("diaryPh")}">${esc(tm.diary||"")}</textarea>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span class="hint">✉ ${t("waitLetter")}</span><button class="savebtn" data-act="savediary">${t("save")}</button></div>
     ${tm.ai?`<div class="letter"><div class="from">${t("letterFrom")} ✦</div>${esc(tm.ai)}</div>`:(()=>{const y=S.moods[ymd(addDays(new Date(),-1))];return y&&y.ai?`<div class="letter"><div class="from">${t("lastNight")} ✦</div>${esc(y.ai)}</div>`:""})()}
-  </div>`;
+  </div>${(()=>{const y=ymd(addDays(new Date(),-1));const k=S.summaries[TODAY]&&!S.summaries[TODAY].sample?TODAY:(S.summaries[y]&&!S.summaries[y].sample?y:null);if(!k)return "";const sm=S.summaries[k];
+    return `<div class="card sumcard" data-act="view" data-v="sum"><div class="card-h" style="margin-bottom:8px"><h2 style="font-size:19px">${k===TODAY?t("tonightSum"):t("lastSum")} ✉</h2>${sm.mood?moodSVG(sm.mood,34):""}</div><p style="margin:0;font-size:14px;line-height:1.75">${esc(sm.text)}</p></div>`})()}`;
 }
 /* ---------- trail (envelope) ---------- */
 let trailDate=TODAY, envOpen=false;
@@ -789,7 +793,7 @@ document.addEventListener("input",e=>{ // keep diary draft
 render();
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-07-d";
+const APP_VER="2026-11-08-a";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
   if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
