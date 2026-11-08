@@ -297,7 +297,7 @@ const I18N={
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
-  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
+  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",demoBar:"✦ 演示版 · 里面是示例数据，随便点，刷新就会恢复",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
   wk:["日","一","二","三","四","五","六"],
   moods:["","生气","难过","一般","开心","很开心"],
   monthFmt:(y,m)=>`${y}年${m}月`,dateFmt:(m,d,w)=>`${m}月${d}日 · 星期${w}`,dayFmt:(m,d)=>`${m}月${d}日`,
@@ -317,7 +317,7 @@ const I18N={
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
-  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
+  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",demoBar:"✦ Demo · sample data, tap around freely — refresh to reset",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
   wk:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
   moods:["","Angry","Sad","Okay","Happy","Joyful"],
   monthFmt:(y,m)=>new Date(y,m-1,1).toLocaleString("en",{month:"long",year:"numeric"}),
@@ -348,7 +348,7 @@ function seed(){
     lang:"zh",view:"home",filter:"all",
     cats:[{id:"c1",name:"秋招",color:"#d48f95"},{id:"c2",name:"小红书",color:"#d6a043"},{id:"c3",name:"生活琐事",color:"#9fae8d"}],
     todos:[
-      {id:uid(),text:"整理华东院面试要点",cat:"c1",created:d(-2),done:false,sample:true},
+      {id:uid(),text:"整理面试要点",cat:"c1",created:d(-2),done:false,sample:true},
       {id:uid(),text:"拍一组冬季好物笔记封面",cat:"c2",created:d(0),done:false,sample:true},
       {id:uid(),text:"取快递 + 买点水果",cat:"c3",created:d(0),done:true,doneAt:d(0),doneTime:"10:24",sample:true}
     ],
@@ -370,16 +370,17 @@ function sampleXhs(date){return {date,sample:true,ver:2,overview:"今天的热�
   {tag:"热点",title:"回国第一年 · 海归求职真实感受",why:"留学生回国求职话题持续有讨论度，真实经历比干货更容易引起共鸣和评论。",
    summary:"用时间线讲自己的经历（落地、找方向、面试、心态变化），结尾抛一个问题引导评论区互动。",refs:[["示例笔记 · 英硕回国秋招复盘","9k 赞"]]}
 ]}}
+const DEMO=new URLSearchParams(location.search).has("demo");
 let S;
-try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!DEMO)try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.cats)S=seed();
 if(S.xhs&&S.xhs.sample&&S.xhs.ver!==2)S.xhs=sampleXhs(S.xhs.date);
-function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function saveLocal(){if(DEMO)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function save(user=true){if(user)S.updatedAt=Date.now();saveLocal();if(user)queueSync()}
 /* ---------- GitHub sync ---------- */
 const GH={owner:"YYZORABULI",repo:"buli-workspace-data",path:"data.json"};
 const TK="bulikingToken";
-let token=null;try{token=localStorage.getItem(TK)}catch(e){}
+let token=null;if(!DEMO)try{token=localStorage.getItem(TK)}catch(e){}
 let sha=null,syncState="off",lastSync=null,syncTimer=null,syncing=false,pending=false;
 const SYNC_KEYS=["cats","todos","logs","moods","summaries","xhs","updatedAt"];
 const b64e=str=>btoa(unescape(encodeURIComponent(str)));
@@ -572,7 +573,7 @@ function todoRow(x){const c=catOf(x.cat),late=!x.done&&dayOf(x)<TODAY?diffDays(T
     <div class="tx">${esc(x.text)}<div>${c?`<span class="tag" style="background:${c.color}33;color:#5d4f48">${esc(c.name)}</span>`:`<span class="tag" style="background:#eee">${t("uncat")}</span>`}${late?`<span class="tag late">${t("late")(late)}</span>`:""}${fut?`<span class="tag due">${CALI}${esc(dueLabel(dayOf(x)))}</span>`:""}</div></div>
     <button class="del" data-act="deltodo" data-id="${x.id}" aria-label="delete">×</button></div>`}
 function homeRest(todos,doneN,tot,pct,tm,chips,week,today){
-  return header()+(!token||syncState==="bad"?`<div class="syncbar" data-act="settings">${!token?t("notSynced"):t("badToken")} <b>${t("goConnect")} ›</b></div>`:"")+`<div class="week">${week}</div><div class="weekh"><button data-act="opencal" data-v="${TODAY}">${t("fullCal")} ›</button></div>
+  return header()+(DEMO?`<div class="syncbar" style="background:#eef0e3;border-color:rgba(159,174,141,.6);color:#5c6b4b;cursor:default">${t("demoBar")}</div>`:"")+(!DEMO&&(!token||syncState==="bad")?`<div class="syncbar" data-act="settings">${!token?t("notSynced"):t("badToken")} <b>${t("goConnect")} ›</b></div>`:"")+`<div class="week">${week}</div><div class="weekh"><button data-act="opencal" data-v="${TODAY}">${t("fullCal")} ›</button></div>
   <div class="stats">
     <div class="stat tint-sage"><small>${t("doneRate")}</small><div class="n">${doneN}<span style="font-size:16px;color:var(--ink2)"> / ${tot}</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>
     <div class="stat tint-rose"><small>${t("moodToday")}</small><div class="n" style="font-size:${tm.level?24:17}px;margin-top:${tm.level?2:8}px">${tm.level?t("moods")[tm.level]:t("notSet")}</div>${tm.level?moodSVG(tm.level,40):""}</div>
@@ -797,9 +798,9 @@ document.addEventListener("input",e=>{ // keep diary draft
 render();
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-08-b";
+const APP_VER="2026-11-08-c";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
-  if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1]))}}catch(e){}}
+  if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1])+(DEMO?"&demo":""))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
 </script>
 </body>
