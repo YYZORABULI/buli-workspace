@@ -173,6 +173,12 @@ nav button:not(.on) svg.nv{opacity:.92}
 .sdot.ok{background:#9fae8d}.sdot.busy{background:#d6a043}.sdot.bad{background:#c2463f}.sdot.off{background:#c9bdb4}
 .syncbar{background:#fbe9e4;border:1px dashed rgba(194,70,63,.4);color:#8a4a44;border-radius:18px;padding:10px 14px;font-size:13px;margin:0 0 12px;cursor:pointer;line-height:1.5}
 .syncbar b{white-space:nowrap}
+.heat{display:flex;gap:12px;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+.heat .hs{width:52px;height:52px;flex:0 0 52px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 35% 30%,#fff6df,var(--ochre-s) 45%,var(--rose-s) 90%);outline:2px dotted rgba(212,143,149,.7);outline-offset:2px}
+.heat .hs b{font-family:var(--display);font-size:22px;line-height:1}.heat .hs small{font-size:10px;color:var(--ink2)}
+.heat .hb{flex:1;min-width:0}.heat .hb small{font-size:11.5px;color:var(--ink2)}
+.hbar{height:7px;border-radius:7px;background:#efe6da;overflow:hidden;margin-bottom:5px}.hbar span{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--sage),var(--ochre),var(--rose))}
 .ddsec{font-size:12px;color:var(--ink2);margin:10px 0 2px;letter-spacing:.5px}
 .dd .todo{padding:8px 2px}
 .uph{margin:10px 0 2px;padding-top:10px;border-top:1px dashed var(--line);font-size:13px;color:var(--ink2);cursor:pointer;display:flex;justify-content:space-between}
@@ -297,7 +303,7 @@ const I18N={
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
-  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",demoBar:"✦ 演示版 · 里面是示例数据，随便点，刷新就会恢复",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
+  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",heat:"热度",heatL1:"可以试试",heatL2:"值得做",heatL3:"优先做",heatNotes:n=>`${n} 篇近7天笔记`,heatLikes:"总赞",demoBar:"✦ 演示版 · 里面是示例数据，随便点，刷新就会恢复",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
   wk:["日","一","二","三","四","五","六"],
   moods:["","生气","难过","一般","开心","很开心"],
   monthFmt:(y,m)=>`${y}年${m}月`,dateFmt:(m,d,w)=>`${m}月${d}日 · 星期${w}`,dayFmt:(m,d)=>`${m}月${d}日`,
@@ -317,7 +323,7 @@ const I18N={
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
-  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",demoBar:"✦ Demo · sample data, tap around freely — refresh to reset",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
+  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",heat:"heat",heatL1:"worth a try",heatL2:"worth doing",heatL3:"do first",heatNotes:n=>`${n} notes in 7d`,heatLikes:"likes",demoBar:"✦ Demo · sample data, tap around freely — refresh to reset",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
   wk:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
   moods:["","Angry","Sad","Okay","Happy","Joyful"],
   monthFmt:(y,m)=>new Date(y,m-1,1).toLocaleString("en",{month:"long",year:"numeric"}),
@@ -358,23 +364,23 @@ function seed(){
     xhs:sampleXhs(d(0))
   };
 }
-function sampleXhs(date){return {date,sample:true,ver:2,overview:"今天的热度集中在「降温换季」和「秋招冲刺」两条线：好物类偏实用、平价、有对比图；热点类偏真人经验和情绪共鸣。",items:[
-  {tag:"好物",title:"冬天手干到裂？平价护手霜横评",why:"降温后「干皮急救」类搜索明显变多，平价横评收藏率高，评论区最爱问「哪支不黏」。",
+function sampleXhs(date){return {date,sample:true,ver:3,overview:"今天的热度集中在「降温换季」和「秋招冲刺」两条线：好物类偏实用、平价、有对比图；热点类偏真人经验和情绪共鸣。",items:[
+  {tag:"护肤",heat:{score:82,notes:8,likes:156000},title:"冬天手干到裂？平价护手霜横评",why:"降温后「干皮急救」类搜索明显变多，平价横评收藏率高，评论区最爱问「哪支不黏」。",
    summary:"做「10 支以内横评 + 一张对比表」，封面放涂抹前后的手背特写；标题点出价格区间和「不黏」，收藏会很稳。",refs:[["示例笔记 · 10支护手霜真实测评","2.3w 赞"],["示例笔记 · 学生党百元内护手","8k 赞"]]},
-  {tag:"好物",title:"出租屋氛围感小物改造",why:"毕业后租房的人多，「低成本改造」的前后对比图天然有点击欲。",
+  {tag:"家居清洁",heat:{score:61,notes:5,likes:42000},title:"出租屋氛围感小物改造",why:"毕业后租房的人多，「低成本改造」的前后对比图天然有点击欲。",
    summary:"用「改造前 / 改造后」双图封面，正文列清单和总价（如 50 元内）；灯带、桌布、香薰这类小物最容易出效果。",refs:[["示例笔记 · 50元改造我的小房间","1.5w 赞"]]},
-  {tag:"好物",title:"高颜值保温杯 · 冬季通勤版",why:"保温杯是冬季礼物和自用的双重刚需，颜值 + 实测保温时长是爆点组合。",
+  {tag:"家居清洁",heat:{score:47,notes:3,likes:18000},title:"高颜值保温杯 · 冬季通勤版",why:"保温杯是冬季礼物和自用的双重刚需，颜值 + 实测保温时长是爆点组合。",
    summary:"实测 6 小时 / 12 小时水温，配一张温度计照片做证据；按「通勤 / 办公 / 送礼」三个场景分组推荐。",refs:[["示例笔记 · 5款保温杯12小时实测","1.1w 赞"]]},
-  {tag:"热点",title:"秋招面试穿搭 · 国企版",why:"秋招进入面试高峰，「得体但不老气」是高频诉求，真人上身图更有说服力。",
+  {tag:"美妆",heat:{score:68,notes:6,likes:73000},title:"秋招面试妆 · 干净不出错版",why:"秋招进入面试高峰，「得体但不老气」是高频诉求，真人上身图更有说服力。",
    summary:"出 3 套真人穿搭（初面 / 终面 / 签约），每套标注单品价格；结尾加一句「面试官视角」的小建议，增加可信度。",refs:[["示例笔记 · 国企面试别穿错","6k 赞"]]},
-  {tag:"热点",title:"回国第一年 · 海归求职真实感受",why:"留学生回国求职话题持续有讨论度，真实经历比干货更容易引起共鸣和评论。",
+  {tag:"美妆",heat:{score:55,notes:4,likes:36000},title:"回国第一年 · 我的平价彩妆回购清单",why:"留学生回国求职话题持续有讨论度，真实经历比干货更容易引起共鸣和评论。",
    summary:"用时间线讲自己的经历（落地、找方向、面试、心态变化），结尾抛一个问题引导评论区互动。",refs:[["示例笔记 · 英硕回国秋招复盘","9k 赞"]]}
 ]}}
 const DEMO=new URLSearchParams(location.search).has("demo");
 let S;
 if(!DEMO)try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.cats)S=seed();
-if(S.xhs&&S.xhs.sample&&S.xhs.ver!==2)S.xhs=sampleXhs(S.xhs.date);
+if(S.xhs&&S.xhs.sample&&S.xhs.ver!==3)S.xhs=sampleXhs(S.xhs.date);
 function saveLocal(){if(DEMO)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function save(user=true){if(user)S.updatedAt=Date.now();saveLocal();if(user)queueSync()}
 /* ---------- GitHub sync ---------- */
@@ -650,12 +656,16 @@ function trail(){
   ${past.length?`<div class="card-h" style="margin:22px 2px 10px"><h2 style="font-size:18px">${t("pastLetters")}</h2></div>
    <div class="pastrow">${past.map(d=>{const x=parse(d);return `<button class="pastenv ${d===k?"on":""}" data-act="trailday" data-v="${d}"><svg viewBox="0 0 60 40"><rect x="1" y="1" width="58" height="38" rx="3" fill="#e7ddd6" stroke="#b9a59d"/><path d="M1 2l29 20 29-20" fill="#ddd1c9" stroke="#b9a59d"/><circle cx="30" cy="22" r="5" fill="#3b4256"/></svg><span>${I18N[S.lang].dayFmt(x.getMonth()+1,x.getDate(),x)}</span></button>`}).join("")}</div>`:""}`;
 }
+function heatBadge(h){if(!h||h.score==null)return "";const sc=Math.round(h.score),lv=sc>=75?3:sc>=50?2:1;
+  const f=n=>n>=10000?(n/10000).toFixed(1).replace(/\.0$/,"")+"w":String(n);
+  return `<div class="heat"><div class="hs"><b>${sc}</b><small>${t("heat")}</small></div><div class="hb"><div class="hbar"><span style="width:${Math.min(100,sc)}%"></span></div>
+   <small>${"✦".repeat(lv)} ${t(["","heatL1","heatL2","heatL3"][lv])}${h.notes!=null?` · ${t("heatNotes")(h.notes)}`:""}${h.likes!=null?` · ${f(h.likes)} ${t("heatLikes")}`:""}</small></div></div>`}
 function xhs(){
   const x=S.xhs;
   return header()+`<div class="card-h" style="margin:4px 2px 12px"><h2>${t("xhs")}</h2>${x&&x.sample?`<span class="badge sample">${t("sample")}</span>`:""}</div>
   <div class="sub" style="margin-top:-8px">${t("xhsSub")}${x?` · ${x.date}`:""}</div>
   ${x&&x.overview?`<div class="card tint-rose" style="background:linear-gradient(165deg,#fbefe9,#f3dcd9)"><div class="card-h" style="margin-bottom:6px"><h2 style="font-size:18px">${t("overview")} ✦</h2></div><div class="why" style="font-size:14px;line-height:1.75">${esc(x.overview)}</div></div>`:""}
-  ${x?x.items.map((it,i)=>`<div class="topic"><span class="badge">${esc(it.tag)}</span> <span style="font-family:var(--display);font-style:italic;color:var(--ink2)">No.${i+1}</span>
+  ${x?[...x.items].sort((a,b)=>((b.heat||{}).score||0)-((a.heat||{}).score||0)).map((it,i)=>`<div class="topic">${heatBadge(it.heat)}<span class="badge">${esc(it.tag)}</span> <span style="font-family:var(--display);font-style:italic;color:var(--ink2)">No.${i+1}</span>
    <h3>${esc(it.title)}</h3><div class="why"><b>${t("why")}：</b>${esc(it.why)}</div>
    ${it.summary?`<div class="tsum"><b>${t("tsum")}</b>${esc(it.summary)}</div>`:""}
    <div class="refs">${it.refs.map(r=>`<div class="ref"><span>${r[2]&&/^https:\/\/(www\.)?xiaohongshu\.com\//.test(r[2])?`<a href="${esc(r[2])}" target="_blank" rel="noopener" style="color:inherit">${esc(r[0])} ↗</a>`:esc(r[0])}</span><span style="color:var(--rose)">♥ ${esc(r[1])}</span></div>`).join("")}</div></div>`).join(""):""}
@@ -798,7 +808,7 @@ document.addEventListener("input",e=>{ // keep diary draft
 render();
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-08-c";
+const APP_VER="2026-11-09-a";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
   if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1])+(DEMO?"&demo":""))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
