@@ -814,10 +814,11 @@ if(TOPICS){S.xhs=null;try{const l=localStorage.getItem("bulikingLang");if(l)S.la
     document.querySelector('link[rel=manifest]').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
     document.querySelector('meta[name=apple-mobile-web-app-title]').content="今日选题";document.title=FOR+"的今日选题"}catch(e){}}
 render();
+if(DEMO&&!TOPICS)loadTopics();
 if(TOPICS){loadTopics();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadTopics()})}
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-09-b";
+const APP_VER="2026-11-09-c";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
   if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1])+(TOPICS?"&for="+encodeURIComponent(FOR):DEMO?"&demo":""))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
