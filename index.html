@@ -303,7 +303,7 @@ const I18N={
   cal:"心情月历",dist:"本月心情分布",trend:"心情起伏",
   sum:"每晚小结",sumNote:"每晚 23:00 根据待办完成情况、今日足迹和日记自动生成",noSum:"还没有小结，今晚 23:00 见",
   settings:"设置",lang:"语言",cats:"待办分类",addCat:"新分类名称",uncat:"未分类",clearSample:"清除示例数据",cleared:"示例数据已清除",
-  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",heat:"热度",heatL1:"可以试试",heatL2:"值得做",heatL3:"优先做",heatNotes:n=>`${n} 篇近7天笔记`,heatLikes:"总赞",demoBar:"✦ 演示版 · 里面是示例数据，随便点，刷新就会恢复",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
+  sync:"GitHub 同步",syncOff:"未连接 · 数据目前只存在这台设备上",syncOn:t=>`已连接 · 上次同步 ${t}`,syncErr:"同步失败，稍后会自动重试",tokenPh:"粘贴你的 GitHub 令牌",connect:"连接",disconnect:"断开",syncing:"同步中…",connected:"已连接 GitHub ✦",badToken:"令牌无效或没有权限",tokenHelp:"令牌只保存在这台设备的浏览器里",lastNight:"昨晚的小信",loadingTopics:"正在取今天的选题…",heat:"热度",heatL1:"可以试试",heatL2:"值得做",heatL3:"优先做",heatNotes:n=>`${n} 篇近7天笔记`,heatLikes:"总赞",demoBar:"✦ 演示版 · 里面是示例数据，随便点，刷新就会恢复",notSynced:"这台设备还没连接 GitHub，看不到小结和选题",goConnect:"去连接",tonightSum:"今晚的小结",lastSum:"昨晚的小结",close:"完成",
   wk:["日","一","二","三","四","五","六"],
   moods:["","生气","难过","一般","开心","很开心"],
   monthFmt:(y,m)=>`${y}年${m}月`,dateFmt:(m,d,w)=>`${m}月${d}日 · 星期${w}`,dayFmt:(m,d)=>`${m}月${d}日`,
@@ -323,7 +323,7 @@ const I18N={
   cal:"Mood calendar",dist:"This month",trend:"Ups & downs",
   sum:"Nightly notes",sumNote:"Written at 23:00 from your to-dos, trail and diary",noSum:"No notes yet — see you at 23:00",
   settings:"Settings",lang:"Language",cats:"To-do categories",addCat:"New category",uncat:"Uncategorised",clearSample:"Clear sample data",cleared:"Sample data cleared",
-  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",heat:"heat",heatL1:"worth a try",heatL2:"worth doing",heatL3:"do first",heatNotes:n=>`${n} notes in 7d`,heatLikes:"likes",demoBar:"✦ Demo · sample data, tap around freely — refresh to reset",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
+  sync:"GitHub sync",syncOff:"Not connected · data stays on this device",syncOn:t=>`Connected · last synced ${t}`,syncErr:"Sync failed, will retry",tokenPh:"Paste your GitHub token",connect:"Connect",disconnect:"Disconnect",syncing:"Syncing…",connected:"Connected to GitHub ✦",badToken:"Token invalid or lacks permission",tokenHelp:"The token stays only in this browser",lastNight:"Last night's letter",loadingTopics:"Fetching today's topics…",heat:"heat",heatL1:"worth a try",heatL2:"worth doing",heatL3:"do first",heatNotes:n=>`${n} notes in 7d`,heatLikes:"likes",demoBar:"✦ Demo · sample data, tap around freely — refresh to reset",notSynced:"This device isn't synced yet — notes and topics won't show",goConnect:"Connect",tonightSum:"Tonight's notes",lastSum:"Last night's notes",close:"Done",
   wk:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
   moods:["","Angry","Sad","Okay","Happy","Joyful"],
   monthFmt:(y,m)=>new Date(y,m-1,1).toLocaleString("en",{month:"long",year:"numeric"}),
@@ -376,7 +376,9 @@ function sampleXhs(date){return {date,sample:true,ver:3,overview:"今天的热�
   {tag:"美妆",heat:{score:55,notes:4,likes:36000},title:"回国第一年 · 我的平价彩妆回购清单",why:"留学生回国求职话题持续有讨论度，真实经历比干货更容易引起共鸣和评论。",
    summary:"用时间线讲自己的经历（落地、找方向、面试、心态变化），结尾抛一个问题引导评论区互动。",refs:[["示例笔记 · 英硕回国秋招复盘","9k 赞"]]}
 ]}}
-const DEMO=new URLSearchParams(location.search).has("demo");
+const QS=new URLSearchParams(location.search);
+const FOR=QS.get("for");const TOPICS=!!FOR;
+const DEMO=QS.has("demo")||TOPICS;
 let S;
 if(!DEMO)try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.cats)S=seed();
@@ -521,8 +523,8 @@ function greeting(){const h=new Date().getHours();return h<11?t("morning"):h<13?
 function header(){
   const d=new Date();
   return `<div class="top">${AVATAR}<div class="right"><button class="iconbtn" data-act="lang">${S.lang==="zh"?"EN":"中"}</button>
-  <button class="iconbtn" data-act="settings" aria-label="settings" style="position:relative"><i class="sdot ${!token?"off":syncState==="ok"?"ok":syncState==="busy"?"busy":"bad"}"></i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b3f3a" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button></div></div>
-  <h1>${greeting()}，${t("name")} <span style="color:var(--ochre)">✦</span></h1>
+  <button class="iconbtn" data-act="settings" aria-label="settings" style="position:relative;${TOPICS?"display:none":""}"><i class="sdot ${!token?"off":syncState==="ok"?"ok":syncState==="busy"?"busy":"bad"}"></i><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b3f3a" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button></div></div>
+  <h1>${greeting()}，${TOPICS?esc(FOR):t("name")} <span style="color:var(--ochre)">✦</span></h1>
   <div class="sub">${I18N[S.lang].dateFmt(d.getMonth()+1,d.getDate(),"日一二三四五六"[d.getDay()],d)}</div>`;
 }
 function catOf(id){return S.cats.find(c=>c.id===id)}
@@ -669,7 +671,7 @@ function xhs(){
    <h3>${esc(it.title)}</h3><div class="why"><b>${t("why")}：</b>${esc(it.why)}</div>
    ${it.summary?`<div class="tsum"><b>${t("tsum")}</b>${esc(it.summary)}</div>`:""}
    <div class="refs">${it.refs.map(r=>`<div class="ref"><span>${r[2]&&/^https:\/\/(www\.)?xiaohongshu\.com\//.test(r[2])?`<a href="${esc(r[2])}" target="_blank" rel="noopener" style="color:inherit">${esc(r[0])} ↗</a>`:esc(r[0])}</span><span style="color:var(--rose)">♥ ${esc(r[1])}</span></div>`).join("")}</div></div>`).join(""):""}
-  ${x&&x.sample?`<div class="empty">${t("xhsNote")}</div>`:""}`;
+  ${x&&x.sample?`<div class="empty">${t("xhsNote")}</div>`:""}${!x&&TOPICS?`<div class="empty">${t("loadingTopics")}</div>`:""}`;
 }
 function cal(){
   const v=S.calMonth?parse(S.calMonth+"-01"):new Date(); const y=v.getFullYear(),m=v.getMonth();
@@ -700,10 +702,12 @@ function sum(){
 }
 function render(){
   document.documentElement.lang=S.lang==="zh"?"zh":"en";
+  if(TOPICS){document.getElementById("app").innerHTML=xhs();document.getElementById("nav").style.display="none";document.querySelector(".app").style.paddingBottom="40px";return}
   const v={home,trail,xhs,cal,sum}[S.view]||home;
   document.getElementById("app").innerHTML=v();
   renderNav();
 }
+async function loadTopics(){try{const j=await fetch("topics.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json());if(j&&j.items){S.xhs=j;render()}}catch(e){}}
 
 /* ---------- settings sheet ---------- */
 let sheetMode="";
@@ -759,7 +763,7 @@ document.addEventListener("click",e=>{
   if(a==="duepick"){newDue=v;const l=document.getElementById("dueLbl");if(l)l.innerHTML=CALI+esc(dueLabel(v));document.getElementById("mask").classList.remove("show");sheetMode="";return}
   if(a==="duemonth"){const[y,m]=dueView.split("-").map(Number);const n=new Date(y,m-1+ +v,1);const nv=`${n.getFullYear()}-${pad(n.getMonth()+1)}`;if(nv>=TODAY.slice(0,7)){dueView=nv;openDue()}return}
   if(a==="view"){S.view=v;window.scrollTo(0,0);if(v==="trail"){trailDate=TODAY;envOpen=false}}
-  else if(a==="lang"){S.lang=S.lang==="zh"?"en":"zh"}
+  else if(a==="lang"){S.lang=S.lang==="zh"?"en":"zh";if(TOPICS)try{localStorage.setItem("bulikingLang",S.lang)}catch(e){}}
   else if(a==="setlang"){S.lang=v;save();render();openSettings();return}
   else if(a==="filter"){S.filter=v}
   else if(a==="toggle"){const x=S.todos.find(x=>x.id===id);x.done=!x.done;x.doneAt=x.done?TODAY:null;x.doneTime=x.done?hm():null}
@@ -805,12 +809,17 @@ document.addEventListener("change",e=>{
 document.addEventListener("input",e=>{ // keep diary draft
   if(e.target.id==="diary"){const m=S.moods[TODAY]||(S.moods[TODAY]={});m.diary=e.target.value;delete m.sample;save()}
 });
+if(TOPICS){S.xhs=null;try{const l=localStorage.getItem("bulikingLang");if(l)S.lang=l}catch(e){}
+  try{const m={name:FOR+"的选题",short_name:"今日选题",start_url:location.pathname+"?for="+encodeURIComponent(FOR),display:"standalone",background_color:"#f4ecdf",theme_color:"#f4ecdf",icons:[{src:new URL("icon-512.png",location.href).href,sizes:"512x512",type:"image/png"}]};
+    document.querySelector('link[rel=manifest]').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));
+    document.querySelector('meta[name=apple-mobile-web-app-title]').content="今日选题";document.title=FOR+"的今日选题"}catch(e){}}
 render();
+if(TOPICS){loadTopics();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")loadTopics()})}
 if(token)syncNow(false);
 /* auto-update: if a newer version is live, jump to it (beats phone caches) */
-const APP_VER="2026-11-09-a";
+const APP_VER="2026-11-09-b";
 async function checkUpdate(){try{const h=await fetch("./?nocache="+Date.now(),{cache:"no-store"}).then(r=>r.text());const m=h.match(/APP_VER="([^"]+)"/);
-  if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1])+(DEMO?"&demo":""))}}catch(e){}}
+  if(m&&m[1]!==APP_VER){location.replace(location.pathname+"?v="+encodeURIComponent(m[1])+(TOPICS?"&for="+encodeURIComponent(FOR):DEMO?"&demo":""))}}catch(e){}}
 checkUpdate();document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
 </script>
 </body>
